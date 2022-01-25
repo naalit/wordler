@@ -2,7 +2,7 @@
 
 This is a very simple command-line wordle solver, which uses the strategy of guessing all possible 5-letter words in order of frequency, filtering out ones that are impossible as it learns more information. In some testing on the Wordle archives, I haven't found any that it can't solve in 6, and it can solve most of them in less time.
 
-It can also work alongside a human, as it gives you three guesses to pick from (when testing it by itself, I just always select the first guess).
+It can also work alongside a human, as it gives you three guesses to pick from (when testing it by itself, I just always select the first guess, which you can easily do by pressing Enter instead of entering a number).
 
 ### Example usage:
 ```
