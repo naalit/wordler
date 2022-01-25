@@ -1,16 +1,26 @@
 use std::io::{Read, Write};
 
+/// All the information we know about the word
 #[derive(Default)]
 struct Model {
+    /// Characters that we know the location of in the word
     green: [Option<char>; 5],
+    /// Characters we know are in the word, along with a location we know they're *not*
     yellow: Vec<(char, usize)>,
+    /// Characters we know are *not* in the word
     not: Vec<char>,
 }
 impl Model {
+    /// Whether the provided word is possible.
+    /// It must be 5 letters long, and it must match the information we have.
     fn matches(&self, x: &str) -> bool {
         x.len() == 5
-            && x.chars().zip(&self.green).all(|(a, b)| b.map_or(true, |b| a == b))
-            && self.yellow.iter().all(|(c, i)| x.contains(*c) && x.chars().enumerate().all(|(i2, c2)| c2 != *c || i2 != *i))
+            && x.chars()
+                .zip(&self.green)
+                .all(|(a, b)| b.map_or(true, |b| a == b))
+            && self.yellow.iter().all(|(c, i)| {
+                x.contains(*c) && x.chars().enumerate().all(|(i2, c2)| c2 != *c || i2 != *i)
+            })
             && self.not.iter().all(|c| !x.contains(*c))
     }
 }
@@ -35,9 +45,11 @@ fn main() {
             start += 1;
         }
         if start >= words.len() {
-            eprintln!("It's not on the list!");
+            eprintln!("It looks like we've exhausted all possible words.");
+            eprintln!("Chances are you skipped a valid word or entered the results wrong.");
             std::process::exit(1);
         }
+
         let mut three = Vec::new();
         for &i in &words[start..] {
             if model.matches(i) {
@@ -47,7 +59,7 @@ fn main() {
                 }
             }
         }
-        println!("Guesses:");
+        println!("\nGuesses:");
         for (i, s) in three.iter().enumerate() {
             println!("  {}: {}", i, s);
         }
@@ -60,7 +72,12 @@ fn main() {
             start += 1;
             continue;
         }
-        let pick = usize::from_str_radix(pick.trim(), 10).unwrap();
+        // If they just hit enter, count that as 0
+        let pick = if pick.trim().is_empty() {
+            0
+        } else {
+            usize::from_str_radix(pick.trim(), 10).unwrap()
+        };
         let pick = three[pick];
 
         print!("Green: ");
@@ -71,12 +88,14 @@ fn main() {
         for (i, c) in green.trim_end().chars().enumerate() {
             if c != ' ' && c != '_' {
                 model.green[i] = Some(c);
+                // We don't actually remove the letter from `model.yellow`, because it could be at
+                // other spots in the word too, so we need to remember which spots we ruled out.
             } else {
                 all_green = false;
             }
         }
         if all_green {
-            println!("Got '{}' in {}", pick, iter + 1);
+            println!("Got '{}' in {}", pick, iter);
             return;
         }
 
@@ -91,7 +110,9 @@ fn main() {
         }
 
         for i in pick.chars() {
-            if model.yellow.iter().all(|(c, _)| *c != i) && model.green.iter().all(|x| *x != Some(i)) {
+            if model.yellow.iter().all(|(c, _)| *c != i)
+                && model.green.iter().all(|x| *x != Some(i))
+            {
                 model.not.push(i);
             }
         }
